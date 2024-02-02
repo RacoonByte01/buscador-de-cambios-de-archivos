@@ -17,7 +17,7 @@ import java.util.Map;
 /**
  * Main
  * @author JaviLeL
- * @version 1.0.1 (Arreglando la iteracion para windows)
+ * @version 1.0.1  
  */
 public class Main {
     // Guardare los archivos con sus atributos
