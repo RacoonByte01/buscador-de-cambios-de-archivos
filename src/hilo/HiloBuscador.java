@@ -26,7 +26,9 @@ public class HiloBuscador extends Thread{
         // Se recorreran todos los archivos de la carpeta raiz y si alguno se ha modificado
         for (File file : fileRoot.listFiles()) {
             if (file.isDirectory()) {
+                // Añado la carpeta ha la lista
                 Main.setNewPath(file);
+                // Lanzo un nuevo hilo buscador
                 Main.setNewHilo(new HiloBuscador());
             }else{
                 try {
