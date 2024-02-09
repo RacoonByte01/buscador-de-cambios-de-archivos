@@ -1,22 +1,34 @@
 package hilo;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import main.Main;
 
 public class HiloBuscador extends Thread{
-    
+    // Se guardara en el mapa la path de los archivos con la vez que fueron modificados
+    private Map<File, String> archivos;
+    private final static String NAMESAVEFILES = ".data.dat";
     @Override
     public void run() {
         File file;
         
         while ((file=Main.getPathOfList())!=null){
             // System.out.println("Inicio de analisis de "+this.getName());
+            archivos = recolectarInformacion(file);
             buscar(file.getAbsolutePath());
+            guardarInformacion(archivos, file);
         }
         Main.removeHilo(this);
     }
@@ -34,12 +46,12 @@ public class HiloBuscador extends Thread{
                 try {
                     // System.out.println(file.getPath());
                     BasicFileAttributes attr = Files.readAttributes(Paths.get(file.getPath()) , BasicFileAttributes.class);
-                    if (Main.getInMap(file)==null && !file.getAbsolutePath().equals(Main.data.getAbsolutePath())) {
-                        Main.putInMap(file, attr.lastModifiedTime().toString());
+                    if (archivos.get(file)==null && !file.toString().equals(fileRoot.getAbsolutePath()+"\\"+NAMESAVEFILES)) {
+                        archivos.put(file, attr.lastModifiedTime().toString());
                         System.out.println(file.getPath()+" es un archivo nuevo");
-                    }else if(!file.getAbsolutePath().equals(Main.data.getAbsolutePath())){
-                        if (!Main.getInMap(file).equals(attr.lastModifiedTime().toString())) {
-                            Main.putInMap(file, attr.lastModifiedTime().toString());
+                    }else if(!file.toString().equals(fileRoot.getAbsolutePath()+"\\"+NAMESAVEFILES)){
+                        if (!archivos.get(file).equals(attr.lastModifiedTime().toString())) {
+                            archivos.put(file, attr.lastModifiedTime().toString());
                             System.out.println(file.getPath()+" Se ha modificado");
                         }
                     }
@@ -49,6 +61,31 @@ public class HiloBuscador extends Thread{
             }
         }
         // Se mirara si alguno se ha borrado
+        List<File> filesDelete = new ArrayList<>();
+        for (File file : archivos.keySet()) {
+            if (!file.isFile()) {
+                System.out.println(file+" Se ha eliminado");
+                filesDelete.add(file);
+            }
+        }
+        filesDelete.stream().forEach(archivos::remove);
     }
-
+    public void guardarInformacion(Map<File, String> infoMap, File file){
+        if (file.list().length!=0 || (file.list().length==1 && !new File(file.list()[0]).isDirectory())) {
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(file+"\\"+NAMESAVEFILES)))){
+                oos.writeObject(infoMap);
+            } catch (Exception e) {
+                System.out.println(e+" (Error al guardar)");
+            }
+        }
+    }
+    @SuppressWarnings("unchecked")
+    public Map<File, String> recolectarInformacion(File file){
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(new File(file+"\\"+NAMESAVEFILES)))){
+            return (Map<File, String>) ois.readObject();
+        } catch (Exception e) {
+            // System.out.println("Data no creado");
+            return new HashMap<>();
+        }
+    }
 }
