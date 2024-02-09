@@ -22,7 +22,7 @@ public class Main {
     private static List<HiloBuscador> hiloBuscadores = new ArrayList<>();
 
     // Path donde iniciara a buscar 
-    private static File pathInicio = new File("D:\\Trabajos\\2º_Año\\Clase\\PSP\\UD2\\buscador-de-cambios-de-archivos\\src");
+    public static File pathInicio = new File("D:\\Trabajos\\2º_Año\\Clase\\PSP\\UD2\\buscador-de-cambios-de-archivos\\src");
     // Path donde se guardara la informacion recolectada de los archivos
     public static final File data = new File("data.dat"); // Archivo donde se guardara la informacion
 

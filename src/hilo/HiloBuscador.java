@@ -19,7 +19,7 @@ import main.Main;
 public class HiloBuscador extends Thread{
     // Se guardara en el mapa la path de los archivos con la vez que fueron modificados
     private Map<File, String> archivos;
-    private final static String NAMESAVEFILES = ".data.dat";
+    public final static String NAMESAVEFILES = ".data.dat";
     @Override
     public void run() {
         File file;
