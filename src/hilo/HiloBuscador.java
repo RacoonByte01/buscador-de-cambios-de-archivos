@@ -71,7 +71,7 @@ public class HiloBuscador extends Thread{
         filesDelete.stream().forEach(archivos::remove);
     }
     public void guardarInformacion(Map<File, String> infoMap, File file){
-        if (file.list().length!=0 || (file.list().length==1 && !new File(file.list()[0]).isDirectory())) {
+        if (!(file.list().length==0 || (file.listFiles().length==1 && file.listFiles()[0].isDirectory()))){
             try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(file+"\\"+NAMESAVEFILES)))){
                 oos.writeObject(infoMap);
             } catch (Exception e) {
