@@ -14,7 +14,7 @@ public class HiloBuscador extends Thread{
     public void run() {
         File file;
         
-        if ((file=Main.getPathOfList())!=null){
+        while ((file=Main.getPathOfList())!=null){
             // System.out.println("Inicio de analisis de "+this.getName());
             buscar(file.getAbsolutePath());
         }
