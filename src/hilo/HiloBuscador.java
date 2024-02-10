@@ -42,28 +42,27 @@ public class HiloBuscador extends Thread{
                 Main.setNewPath(file);
                 // Lanzo un nuevo hilo buscador
                 Main.setNewHilo(new HiloBuscador());
-            }else{
-                try {
-                    // System.out.println(file.getPath());
-                    BasicFileAttributes attr = Files.readAttributes(Paths.get(file.getPath()) , BasicFileAttributes.class);
-                    if (archivos.get(file)==null && !file.toString().equals(fileRoot.getAbsolutePath()+"\\"+NAMESAVEFILES)) {
+            }
+            try {
+                // System.out.println(file.getPath());
+                BasicFileAttributes attr = Files.readAttributes(Paths.get(file.getPath()) , BasicFileAttributes.class);
+                if (archivos.get(file)==null && !file.toString().equals(fileRoot.getAbsolutePath()+"\\"+NAMESAVEFILES)) {
+                    archivos.put(file, attr.lastModifiedTime().toString());
+                    System.out.println(file.getPath()+" es un archivo nuevo");
+                }else if(!file.toString().equals(fileRoot.getAbsolutePath()+"\\"+NAMESAVEFILES)){
+                    if (!archivos.get(file).equals(attr.lastModifiedTime().toString())) {
                         archivos.put(file, attr.lastModifiedTime().toString());
-                        System.out.println(file.getPath()+" es un archivo nuevo");
-                    }else if(!file.toString().equals(fileRoot.getAbsolutePath()+"\\"+NAMESAVEFILES)){
-                        if (!archivos.get(file).equals(attr.lastModifiedTime().toString())) {
-                            archivos.put(file, attr.lastModifiedTime().toString());
-                            System.out.println(file.getPath()+" Se ha modificado");
-                        }
+                        System.out.println(file.getPath()+" Se ha modificado");
                     }
-                } catch (IOException e) {
-                    System.out.println(e+" (no se pudo consegir los atributos)");
                 }
+            } catch (IOException e) {
+                System.out.println(e+" (no se pudo consegir los atributos)");
             }
         }
         // Se mirara si alguno se ha borrado
         List<File> filesDelete = new ArrayList<>();
         for (File file : archivos.keySet()) {
-            if (!file.isFile()) {
+            if (!file.exists()) {
                 System.out.println(file+" Se ha eliminado");
                 filesDelete.add(file);
             }
@@ -71,12 +70,10 @@ public class HiloBuscador extends Thread{
         filesDelete.stream().forEach(archivos::remove);
     }
     public void guardarInformacion(Map<File, String> infoMap, File file){
-        if (!(file.list().length==0 || (file.listFiles().length==1 && file.listFiles()[0].isDirectory()))){
-            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(file+"\\"+NAMESAVEFILES)))){
-                oos.writeObject(infoMap);
-            } catch (Exception e) {
-                System.out.println(e+" (Error al guardar)");
-            }
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(file+"\\"+NAMESAVEFILES)))){
+            oos.writeObject(infoMap);
+        } catch (Exception e) {
+            System.out.println(e+" (Error al guardar)");
         }
     }
     @SuppressWarnings("unchecked")
