@@ -1,11 +1,13 @@
 package hilo;
 
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -17,6 +19,9 @@ import java.util.Map;
 import main.Main;
 
 public class HiloBuscador extends Thread{
+
+    public static Socket socket;
+    static DataOutputStream out;
     // Se guardara en el mapa la path de los archivos con la vez que fueron modificados
     private Map<File, String> archivos;
     public final static String NAMESAVEFILES = ".data.dat";
@@ -46,12 +51,14 @@ public class HiloBuscador extends Thread{
             try {
                 // System.out.println(file.getPath());
                 BasicFileAttributes attr = Files.readAttributes(Paths.get(file.getPath()) , BasicFileAttributes.class);
-                if (archivos.get(file)==null && !file.toString().equals(fileRoot.getAbsolutePath()+"\\"+NAMESAVEFILES)) {
+                if (archivos.get(file)==null && !file.toString().equals(fileRoot.getAbsolutePath()+Main.SEPARADOR+NAMESAVEFILES)) {
                     archivos.put(file, attr.lastModifiedTime().toString());
+                    mandarMensaje(file.getPath()+" es un archivo nuevo");
                     System.out.println(file.getPath()+" es un archivo nuevo");
-                }else if(!file.toString().equals(fileRoot.getAbsolutePath()+"\\"+NAMESAVEFILES)){
+                }else if(!file.toString().equals(fileRoot.getAbsolutePath()+Main.SEPARADOR+NAMESAVEFILES)){
                     if (!archivos.get(file).equals(attr.lastModifiedTime().toString())) {
                         archivos.put(file, attr.lastModifiedTime().toString());
+                        mandarMensaje(file.getPath()+" Se ha modificado");
                         System.out.println(file.getPath()+" Se ha modificado");
                     }
                 }
@@ -63,6 +70,7 @@ public class HiloBuscador extends Thread{
         List<File> filesDelete = new ArrayList<>();
         for (File file : archivos.keySet()) {
             if (!file.exists()) {
+                mandarMensaje(file+" Se ha eliminado");
                 System.out.println(file+" Se ha eliminado");
                 filesDelete.add(file);
             }
@@ -70,7 +78,7 @@ public class HiloBuscador extends Thread{
         filesDelete.stream().forEach(archivos::remove);
     }
     public void guardarInformacion(Map<File, String> infoMap, File file){
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(file+"\\"+NAMESAVEFILES)))){
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(file+Main.SEPARADOR+NAMESAVEFILES)))){
             oos.writeObject(infoMap);
         } catch (Exception e) {
             System.out.println(e+" (Error al guardar)");
@@ -78,11 +86,23 @@ public class HiloBuscador extends Thread{
     }
     @SuppressWarnings("unchecked")
     public Map<File, String> recolectarInformacion(File file){
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(new File(file+"\\"+NAMESAVEFILES)))){
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(new File(file+Main.SEPARADOR+NAMESAVEFILES)))){
             return (Map<File, String>) ois.readObject();
         } catch (Exception e) {
             // System.out.println("Data no creado");
             return new HashMap<>();
+        }
+    }
+    /**
+     * Manda un mensaje
+     * @param mensaje
+     */
+    private synchronized void mandarMensaje(String mensaje) {
+        try {
+            out = new DataOutputStream(socket.getOutputStream());
+            out.writeUTF(mensaje);
+        } catch (Exception e) {
+            // System.out.println(e + " (Error por al unirse al server)");
         }
     }
 }

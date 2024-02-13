@@ -1,6 +1,7 @@
 package main;
 
 import java.io.File;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,14 +16,17 @@ public class Main {
     // numero de hilos maxiomos en el programa 
     final private static int numeroHilos = 20;
 
+    // Dependiendo de tu sistema operativo Linux = / Windows \
+    public final static String SEPARADOR = "/";
+
     // Lista que contendra todas las paths 
-    private static List<File> paths = new ArrayList<>();
+    private static List<File> paths = new ArrayList<>(); 
 
     // Lista que contiene el acceso en memoria de los hilos que se lanzan
     private static List<HiloBuscador> hiloBuscadores = new ArrayList<>();
 
     // Path donde iniciara a buscar 
-    public static File pathInicio = new File("D:\\Trabajos\\2º_Año\\Clase\\PSP\\UD2\\buscador-de-cambios-de-archivos\\src");
+    public static File pathInicio = new File("/home/javier/Documents/buscador-de-cambios-de-archivos/src");
     // Path donde se guardara la informacion recolectada de los archivos
     public static final File data = new File("data.dat"); // Archivo donde se guardara la informacion
 
@@ -33,7 +37,11 @@ public class Main {
     public static void main(String[] args) {
 
         // archivos = recolectarInformacion();
-
+        try {
+            HiloBuscador.socket = new Socket("192.168.1.129", 5000);
+        } catch (Exception e) {
+            System.out.println("No se conecto al servidor");
+        }
         setNewPath(pathInicio);
         setNewHilo(new HiloBuscador());
 
