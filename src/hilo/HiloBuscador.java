@@ -51,6 +51,13 @@ public class HiloBuscador extends Thread{
             try {
                 // System.out.println(file.getPath());
                 BasicFileAttributes attr = Files.readAttributes(Paths.get(file.getPath()) , BasicFileAttributes.class);
+
+                for (String extensiones : Main.extesionesIgnoradas) {
+                    if(file.getName().endsWith("."+extensiones)){
+                        return;
+                    }
+                }
+                
                 if (archivos.get(file)==null && !file.toString().equals(fileRoot.getAbsolutePath()+Main.SEPARADOR+NAMESAVEFILES)) {
                     archivos.put(file, attr.lastModifiedTime().toString());
                     mandarMensaje(file.getPath()+" es un archivo nuevo");
@@ -62,6 +69,7 @@ public class HiloBuscador extends Thread{
                         System.out.println(file.getPath()+" Se ha modificado");
                     }
                 }
+                
             } catch (IOException e) {
                 System.out.println(e+" (no se pudo consegir los atributos)");
             }
@@ -99,8 +107,10 @@ public class HiloBuscador extends Thread{
      */
     private synchronized void mandarMensaje(String mensaje) {
         try {
-            out = new DataOutputStream(socket.getOutputStream());
-            out.writeUTF(mensaje);
+            if(socket!=null){
+                out = new DataOutputStream(socket.getOutputStream());
+                out.writeUTF(mensaje);
+            }
         } catch (Exception e) {
             // System.out.println(e + " (Error por al unirse al server)");
         }
