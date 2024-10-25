@@ -1,6 +1,6 @@
 # Buscador de cambios de archivos
 
-Este es un muy pequeño prollecto bastante potente. Su fin es pasar al programa un directorio raiz y este imprimira por pantalla todo los cambios que este encuentre.
+Este es un muy pequeño proyecto bastante potente. Su fin es pasar al programa un directorio raiz y este imprimira por pantalla todo los cambios que este encuentre.
 
 ## Uso
 
