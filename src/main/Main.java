@@ -1,18 +1,10 @@
 package main;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import hilo.HiloBuscador;
 
 /**
  * Main
@@ -20,62 +12,82 @@ import java.util.Map;
  * @version 1.0.1  
  */
 public class Main {
-    // Guardare los archivos con sus atributos
-    static Map<File, String> archivos;
-    static final File data = new File("data.dat"); // Archivo donde se guardara la informacion
+    // numero de hilos maxiomos en el programa 
+    final private static int numeroHilos = 20;
+
+    // Lista que contendra todas las paths 
+    private static List<File> paths = new ArrayList<>();
+
+    // Lista que contiene el acceso en memoria de los hilos que se lanzan
+    private static List<HiloBuscador> hiloBuscadores = new ArrayList<>();
+
+    // Path donde iniciara a buscar 
+    public static File pathInicio = new File("D:\\Trabajos\\2º_Año\\Clase\\PSP\\UD2\\buscador-de-cambios-de-archivos\\src");
+    // Path donde se guardara la informacion recolectada de los archivos
+    public static final File data = new File("data.dat"); // Archivo donde se guardara la informacion
+
+    /**
+     * Metodo que lanzara el hilo principal
+     * @param args
+     */
     public static void main(String[] args) {
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(data))){
-            archivos = (Map<File, String>) ois.readObject();
-        } catch (Exception e) {
-            System.out.println("Data no creado");
-            archivos = new HashMap<>();
-        }
+
+        // archivos = recolectarInformacion();
+
+        setNewPath(pathInicio);
+        setNewHilo(new HiloBuscador());
+
         while (true) {
-            buscar("C:\\Users\\ALUMNO\\Desktop");
-            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(data))){
-                oos.writeObject(archivos);
-            } catch (Exception e) {
-                System.out.println(e+" (Error al guardar)");
-            }
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
-                System.out.println(e+" (Error al parar el hilo)");
+                System.out.println(e + "(Error al dormir el hilo)");
             }
+            if (hiloBuscadores.size()==0) {
+                setNewPath(pathInicio);
+                setNewHilo(new HiloBuscador());
+            }
+
+        }
+       
+    }
+    /**
+     * Añade una path a la lista
+     * @param file
+     */
+    public static synchronized void setNewPath(File file){
+        paths.add(file);
+    }
+    /**
+     * Devuelve la primera path de la lista y la elimina de esta para evitar conflictos
+     * @return
+     */
+    public static synchronized File getPathOfList(){
+        try{
+            File folder = paths.get(0);
+            if (folder!=null) {
+                paths.remove(0);
+            }
+            return folder;
+        }catch(Exception e){
+            return null;
         }
     }
-    public static void buscar(String path){
-        File fileRoot = new File(path);
-        // Se recorreran todos los archivos de la carpeta raiz y si alguno se ha modificado
-        for (File file : fileRoot.listFiles()) {
-            if (file.isDirectory()) {
-                buscar(file.getPath());
-            }else{
-                try {
-                    // System.out.println(file.getPath());
-                    BasicFileAttributes attr = Files.readAttributes(Paths.get(file.getPath()) , BasicFileAttributes.class);
-                    if (archivos.get(file)==null && !file.getAbsolutePath().equals(data.getAbsolutePath())) {
-                        archivos.put(file, attr.lastModifiedTime().toString());
-                        System.out.println(file.getPath()+" es un archivo nuevo");
-                    }else if(!file.getAbsolutePath().equals(data.getAbsolutePath())){
-                        if (!archivos.get(file).equals(attr.lastModifiedTime().toString())) {
-                            archivos.put(file, attr.lastModifiedTime().toString());
-                            System.out.println(file.getPath()+" Se ha modificado");
-                        }
-                    }
-                } catch (IOException e) {
-                    System.out.println(e+" (no se pudo consegir los atributos)");
-                }
-            }
+    /**
+     * Lanza y guarda un nuevo hilo que busca objetos
+     * @param hiloBuscador
+     */
+    public static synchronized void setNewHilo(HiloBuscador hiloBuscador){
+        if((hiloBuscadores.size()<numeroHilos)){
+            hiloBuscadores.add(hiloBuscador);
+            hiloBuscador.start();
         }
-        // Se mirara si alguno se ha borrado
-        List<File> filesDelete = new ArrayList<>();
-        for (File file : archivos.keySet()) {
-            if (!file.isFile()) {
-                System.out.println(file+" Se ha eliminado");
-                filesDelete.add(file);
-            }
-        }
-        filesDelete.stream().forEach(archivos::remove);
+    }
+    /**
+     * Elimina de la lista un hilo en especifico
+     * @param hiloBuscador
+     */
+    public static synchronized void removeHilo(HiloBuscador hiloBuscador){
+        hiloBuscadores.remove(hiloBuscador);
     }
 }
